@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Grandes Pesées — Roulotte Sodi</title>
+<style>
+:root{
+  --vert:#1B5E20;--vert2:#2E7D32;--vert3:#E8F5E9;
+  --rouge:#B71C1C;--rouge3:#FFEBEE;
+  --bleu:#0D47A1;--bleu2:#1565C0;--bleu3:#E3F2FD;
+  --or:#F9A825;--or3:#FFFDE7;
+  --vio:#4A148C;--vio2:#7B1FA2;--vio3:#F3E5F5;
+  --gris:#37474F;--bg:#F0F4F8;
+  --ombre:0 2px 16px rgba(0,0,0,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#222;min-height:100vh}
+
+header{
+  background:linear-gradient(135deg,#1A237E,#283593);
+  color:#fff;padding:15px 18px 11px;text-align:center;
+  position:sticky;top:0;z-index:100;box-shadow:var(--ombre);
+}
+header h1{font-size:1.1rem;font-weight:800}
+header p{font-size:.72rem;opacity:.85;margin-top:2px}
+
+.wrap{max-width:520px;margin:0 auto;padding:14px 14px 110px}
+.card{background:#fff;border-radius:13px;box-shadow:var(--ombre);margin-bottom:10px;padding:14px}
+.field-label{font-size:.7rem;font-weight:800;color:var(--gris);
+  text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px}
+.inp{width:100%;padding:11px 13px;border:2px solid #CFD8DC;border-radius:10px;
+  font-size:.96rem;background:#fff;transition:border-color .15s}
+.inp:focus{outline:none;border-color:var(--bleu2)}
+.inp.ok{border-color:var(--vert2);background:var(--vert3)}
+
+/* BLOC PRODUIT */
+.prod-bloc{background:#fff;border-radius:13px;box-shadow:var(--ombre);
+  margin-bottom:12px;overflow:hidden}
+.prod-hdr{padding:11px 14px 9px;display:flex;align-items:center;gap:9px;cursor:pointer}
+.prod-hdr .em{font-size:1.3rem}
+.prod-hdr-txt h3{font-size:.93rem;font-weight:800}
+.prod-hdr-txt p{font-size:.7rem;color:#888;margin-top:1px}
+.prod-hdr .chevron{margin-left:auto;font-size:.9rem;color:#999;transition:transform .2s}
+.prod-hdr.open .chevron{transform:rotate(180deg)}
+
+.prod-body{display:none;border-top:1px solid #F0F0F0}
+.prod-body.open{display:block}
+
+/* CATÉGORIES VEILLE / AUJOURD'HUI */
+.cat-title{font-size:.7rem;font-weight:800;color:#fff;
+  padding:5px 14px;text-transform:uppercase;letter-spacing:.7px}
+.cat-veille{background:#37474F}
+.cat-auj{background:var(--bleu2)}
+.cat-total{background:var(--vert2)}
+
+/* CHAMPS */
+.champ-row{display:flex;align-items:center;gap:8px;
+  padding:9px 14px;border-bottom:1px solid #F5F5F5}
+.champ-row:last-child{border-bottom:none}
+.champ-row:nth-child(even){background:#FAFAFA}
+.champ-lbl{flex:1;font-size:.86rem;font-weight:600;color:#333}
+.champ-lbl small{display:block;font-size:.67rem;color:#999;font-weight:400;margin-top:1px}
+.champ-val{width:80px;padding:7px 6px;text-align:center;
+  border:2px solid #E0E0E0;border-radius:8px;
+  font-size:.93rem;font-weight:800;color:var(--bleu2);
+  background:var(--bleu3);transition:border-color .15s}
+.champ-val:focus{outline:none;border-color:var(--bleu2);background:#fff}
+.champ-val.filled{border-color:var(--vert2);background:var(--vert3);color:var(--vert2)}
+.champ-val.calc{background:#E8F5E9;border-color:var(--vert2);
+  color:var(--vert);font-style:italic;pointer-events:none}
+.champ-unit{font-size:.7rem;font-weight:700;color:#999;min-width:26px}
+
+/* TOTAL AUTO */
+.total-row{background:var(--vert3);padding:9px 14px;
+  display:flex;align-items:center;gap:8px;border-top:2px solid var(--vert2)}
+.total-lbl{flex:1;font-size:.88rem;font-weight:800;color:var(--vert)}
+.total-val{font-size:1rem;font-weight:900;color:var(--vert);min-width:80px;text-align:center}
+
+/* PROGRESS */
+.prog-bar{background:#E8EAF6;border-radius:100px;height:5px;margin:0 0 10px}
+.prog-fill{background:linear-gradient(90deg,var(--bleu2),var(--or));
+  height:100%;border-radius:100px;transition:width .3s ease;width:0%}
+.prog-lbl{text-align:center;font-size:.69rem;color:#999;margin-top:3px;margin-bottom:10px}
+
+/* BOT BAR */
+.bot-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;
+  border-top:2px solid #E8EAF6;padding:10px 14px;display:flex;gap:9px;
+  max-width:520px;margin:0 auto;box-shadow:0 -2px 14px rgba(0,0,0,.08)}
+.btn-sec{flex:1;padding:12px;border:2px solid #E0E0E0;border-radius:10px;
+  background:#fff;font-size:.87rem;font-weight:800;color:#666;cursor:pointer}
+.btn-prim{flex:2;padding:12px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#1A237E,var(--bleu2));
+  color:#fff;font-size:.9rem;font-weight:800;cursor:pointer;
+  box-shadow:0 3px 10px rgba(13,71,161,.3)}
+.btn-prim:disabled{background:#B0BEC5;box-shadow:none;cursor:not-allowed}
+
+.suc{display:none;background:var(--vert3);border:2px solid var(--vert2);
+  border-radius:11px;padding:13px;margin:10px 0;
+  color:var(--vert);font-weight:800;text-align:center}
+.suc.show{display:block}
+
+#toast{display:none;position:fixed;bottom:78px;left:50%;transform:translateX(-50%);
+  background:#263238;color:#fff;padding:9px 18px;border-radius:22px;
+  font-size:.83rem;font-weight:700;z-index:999;white-space:nowrap}
+#toast.show{display:block}
+.spin{display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚖️ Roulotte Sodi — Grandes Pesées</h1>
+  <p>Stocks veille + préparations du jour</p>
+</header>
+
+<div class="wrap">
+  <!-- Prénom + date -->
+  <div class="card">
+    <label class="field-label">👤 Votre prénom</label>
+    <input type="text" class="inp" id="prenom" placeholder="Ex : Kevin, Marie, Teva..."
+      autocomplete="given-name"
+      oninput="this.classList.toggle('ok',!!this.value);updateProg()"/>
+  </div>
+  <div class="card" style="display:flex;gap:10px;padding:12px 14px">
+    <div style="flex:1"><label class="field-label">📅 Date</label>
+      <input type="date" class="inp" id="date-val" oninput="updateProg()"/></div>
+    <div style="flex:1"><label class="field-label">🕐 Heure</label>
+      <input type="time" class="inp" id="heure-val"/></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-lbl" id="prog-lbl">Remplir les pesées ci-dessous</div>
+
+  <!-- ═══ PRODUITS ════════════════════════════════════════════════════════ -->
+
+  <!-- THON ROUGE -->
+  <div class="prod-bloc" id="bloc-thon">
+    <div class="prod-hdr" onclick="toggle('thon')">
+      <span class="em">🐟</span>
+      <div class="prod-hdr-txt"><h3>Thon Rouge</h3><p>Poisson cru + Sashimi</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-thon">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste poisson cru<small>Non utilisé hier soir</small></div>
+        <input type="number" class="champ-val" id="thon_pc_veille" placeholder="—" oninput="onV(this);calcThon()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="champ-row"><div class="champ-lbl">Reste sashimi<small>Nombre de sashimis</small></div>
+        <input type="number" class="champ-val" id="thon_sashi_veille" placeholder="—" oninput="onV(this);calcThon()"/><span class="champ-unit">unité</span></div>
+
+      <div class="cat-title cat-auj">🔪 Découpé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Thon pour poisson cru<small>Poids découpé ce jour</small></div>
+        <input type="number" class="champ-val" id="thon_pc_auj" placeholder="—" oninput="onV(this);calcThon()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="champ-row"><div class="champ-lbl">Thon pour sashimi<small>Nombre préparés</small></div>
+        <input type="number" class="champ-val" id="thon_sashi_auj" placeholder="—" oninput="onV(this);calcThon()"/><span class="champ-unit">unité</span></div>
+
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total poisson cru<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="thon_pc_total">—</div><span class="champ-unit">kg</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total sashimi<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="thon_sashi_total">—</div><span class="champ-unit">unité</span></div>
+    </div>
+  </div>
+
+  <!-- POULET GRILLADE -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('poulet_g')">
+      <span class="em">🍗</span>
+      <div class="prod-hdr-txt"><h3>Poulet Grillade</h3><p>À la pièce et au poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-poulet_g">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste poulet (pièces)</div>
+        <input type="number" class="champ-val" id="pg_veille_piece" placeholder="—" oninput="onV(this)"/><span class="champ-unit">pièce</span></div>
+      <div class="champ-row"><div class="champ-lbl">Reste poulet (poids)</div>
+        <input type="number" class="champ-val" id="pg_veille_kg" placeholder="—" oninput="onV(this)" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (pièces)</div>
+        <input type="number" class="champ-val" id="pg_auj_piece" placeholder="—" oninput="onV(this);calcPouletG()"/><span class="champ-unit">pièce</span></div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (poids)</div>
+        <input type="number" class="champ-val" id="pg_auj_kg" placeholder="—" oninput="onV(this);calcPouletG()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total (pièces)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="pg_total_piece">—</div><span class="champ-unit">pièce</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total (poids)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="pg_total_kg">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- ENTRECÔTE -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('entre')">
+      <span class="em">🥩</span>
+      <div class="prod-hdr-txt"><h3>Entrecôte</h3><p>À la pièce et au poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-entre">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste entrecôte (tranches)<small>Nombre de tranches</small></div>
+        <input type="number" class="champ-val" id="entre_veille_piece" placeholder="—" oninput="onV(this)"/><span class="champ-unit">tranche</span></div>
+      <div class="champ-row"><div class="champ-lbl">Reste entrecôte (poids)</div>
+        <input type="number" class="champ-val" id="entre_veille_kg" placeholder="—" oninput="onV(this)" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-auj">🔪 Coupé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Coupé (tranches)</div>
+        <input type="number" class="champ-val" id="entre_auj_piece" placeholder="—" oninput="onV(this);calcEntre()"/><span class="champ-unit">tranche</span></div>
+      <div class="champ-row"><div class="champ-lbl">Coupé (poids)</div>
+        <input type="number" class="champ-val" id="entre_auj_kg" placeholder="—" oninput="onV(this);calcEntre()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total (tranches)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="entre_total_piece">—</div><span class="champ-unit">tranche</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total (poids)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="entre_total_kg">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- POULET PANÉ -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('pane')">
+      <span class="em">🍗</span>
+      <div class="prod-hdr-txt"><h3>Poulet Pané</h3><p>Pièces + poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-pane">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste (pièces)</div>
+        <input type="number" class="champ-val" id="pane_veille_piece" placeholder="—" oninput="onV(this)"/><span class="champ-unit">pièce</span></div>
+      <div class="champ-row"><div class="champ-lbl">Reste (poids)</div>
+        <input type="number" class="champ-val" id="pane_veille_kg" placeholder="—" oninput="onV(this)" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (pièces)</div>
+        <input type="number" class="champ-val" id="pane_auj_piece" placeholder="—" oninput="onV(this);calcPane()"/><span class="champ-unit">pièce</span></div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (poids)</div>
+        <input type="number" class="champ-val" id="pane_auj_kg" placeholder="—" oninput="onV(this);calcPane()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total (pièces)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="pane_total_piece">—</div><span class="champ-unit">pièce</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total (poids)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="pane_total_kg">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- BROCHETTES POULET -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('bro_pou')">
+      <span class="em">🍗</span>
+      <div class="prod-hdr-txt"><h3>Brochettes Poulet</h3><p>Nombre + poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-bro_pou">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste (brochettes)</div>
+        <input type="number" class="champ-val" id="bro_pou_veille" placeholder="—" oninput="onV(this)"/><span class="champ-unit">bro.</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (brochettes)</div>
+        <input type="number" class="champ-val" id="bro_pou_auj" placeholder="—" oninput="onV(this);calcBroPou()"/><span class="champ-unit">bro.</span></div>
+      <div class="champ-row"><div class="champ-lbl">Poids total préparé</div>
+        <input type="number" class="champ-val" id="bro_pou_auj_kg" placeholder="—" oninput="onV(this);calcBroPou()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total (brochettes)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="bro_pou_total">—</div><span class="champ-unit">bro.</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total (poids)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="bro_pou_total_kg">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- BROCHETTES POISSON (STRIPPED) -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('bro_poi')">
+      <span class="em">🐠</span>
+      <div class="prod-hdr-txt"><h3>Brochettes Poisson (Stripped)</h3><p>Nombre + poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-bro_poi">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste (brochettes)</div>
+        <input type="number" class="champ-val" id="bro_poi_veille" placeholder="—" oninput="onV(this)"/><span class="champ-unit">bro.</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (brochettes)</div>
+        <input type="number" class="champ-val" id="bro_poi_auj" placeholder="—" oninput="onV(this);calcBroPoi()"/><span class="champ-unit">bro.</span></div>
+      <div class="champ-row"><div class="champ-lbl">Poids total préparé</div>
+        <input type="number" class="champ-val" id="bro_poi_auj_kg" placeholder="—" oninput="onV(this);calcBroPoi()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total (brochettes)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="bro_poi_total">—</div><span class="champ-unit">bro.</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total (poids)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="bro_poi_total_kg">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- STRIPPED TRANCHES -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('tra_poi')">
+      <span class="em">🐠</span>
+      <div class="prod-hdr-txt"><h3>Stripped — Tranches</h3><p>Nombre + poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-tra_poi">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste (tranches)</div>
+        <input type="number" class="champ-val" id="tra_poi_veille" placeholder="—" oninput="onV(this)"/><span class="champ-unit">tranche</span></div>
+      <div class="champ-row"><div class="champ-lbl">Reste (poids)</div>
+        <input type="number" class="champ-val" id="tra_poi_veille_kg" placeholder="—" oninput="onV(this)" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (tranches)</div>
+        <input type="number" class="champ-val" id="tra_poi_auj" placeholder="—" oninput="onV(this);calcTraPoi()"/><span class="champ-unit">tranche</span></div>
+      <div class="champ-row"><div class="champ-lbl">Poids total préparé</div>
+        <input type="number" class="champ-val" id="tra_poi_auj_kg" placeholder="—" oninput="onV(this);calcTraPoi()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total (tranches)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="tra_poi_total">—</div><span class="champ-unit">tranche</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total (poids)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="tra_poi_total_kg">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- BROCHETTES CŒUR DE VEAU -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('coeur')">
+      <span class="em">🫀</span>
+      <div class="prod-hdr-txt"><h3>Brochettes Cœur de Veau</h3><p>Nombre + poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-coeur">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste (brochettes)</div>
+        <input type="number" class="champ-val" id="coeur_veille" placeholder="—" oninput="onV(this)"/><span class="champ-unit">bro.</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (brochettes)</div>
+        <input type="number" class="champ-val" id="coeur_auj" placeholder="—" oninput="onV(this);calcCoeur()"/><span class="champ-unit">bro.</span></div>
+      <div class="champ-row"><div class="champ-lbl">Poids total</div>
+        <input type="number" class="champ-val" id="coeur_auj_kg" placeholder="—" oninput="onV(this);calcCoeur()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total (brochettes)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="coeur_total">—</div><span class="champ-unit">bro.</span></div>
+      <div class="champ-row"><div class="champ-lbl">Total (poids)<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="coeur_total_kg">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- POULET CHAOMEN -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('chaomen')">
+      <span class="em">🥢</span>
+      <div class="prod-hdr-txt"><h3>Poulet Chaomen</h3><p>Stock préparé en kg</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-chaomen">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste poulet chaomen<small>En kg</small></div>
+        <input type="number" class="champ-val" id="ch_veille_kg" placeholder="—" oninput="onV(this);calcChaomen()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Préparé (poulet chaomen)</div>
+        <input type="number" class="champ-val" id="ch_auj_kg" placeholder="—" oninput="onV(this);calcChaomen()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total disponible<small>Reste veille + préparé</small></div>
+        <div class="champ-val calc" id="ch_total">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- BŒUF BRAISÉ -->
+  <div class="prod-bloc">
+    <div class="prod-hdr" onclick="toggle('braise')">
+      <span class="em">🥩</span>
+      <div class="prod-hdr-txt"><h3>Bœuf Braisé</h3><p>Au poids</p></div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="prod-body" id="body-braise">
+      <div class="cat-title cat-veille">📦 Reste de la veille</div>
+      <div class="champ-row"><div class="champ-lbl">Reste bœuf braisé<small>En kg</small></div>
+        <input type="number" class="champ-val" id="braise_veille" placeholder="—" oninput="onV(this);calcBraise()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-auj">🔪 Préparé aujourd'hui</div>
+      <div class="champ-row"><div class="champ-lbl">Poids bœuf préparé</div>
+        <input type="number" class="champ-val" id="braise_auj_kg" placeholder="—" oninput="onV(this);calcBraise()" step="0.01"/><span class="champ-unit">kg</span></div>
+      <div class="cat-title cat-total">📊 Total à vendre ce soir</div>
+      <div class="champ-row"><div class="champ-lbl">Total bœuf braisé<small>Veille + aujourd'hui</small></div>
+        <div class="champ-val calc" id="braise_total">—</div><span class="champ-unit">kg</span></div>
+    </div>
+  </div>
+
+  <!-- Obs -->
+  <div class="card obs-card">
+    <label class="field-label">📝 Observations générales</label>
+    <textarea id="obs" placeholder="Remarques, manques, qualité..." style="width:100%;min-height:60px;
+      resize:vertical;border:2px solid #E0E0E0;border-radius:8px;padding:9px;
+      font-size:.87rem;font-family:inherit;color:#333"></textarea>
+  </div>
+  <div class="suc" id="suc">✅ Pesées enregistrées !</div>
+</div>
+
+<div id="toast"></div>
+<div class="bot-bar">
+  <button class="btn-sec" onclick="resetAll()">↺ Reset</button>
+  <button class="btn-prim" id="btn-val" onclick="valider()">⚖️ Enregistrer les pesées</button>
+</div>
+
+<script>
+const SUPABASE_URL='https://lfyhkoipiowunxbifant.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmeWhrb2lwaW93dW54YmlmYW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDEyNzcsImV4cCI6MjA5NzgxNzI3N30.c8tkPEo1oK4dr8XA0Hnf4qh8mYe7IrqdBF7hrmZ8XEI';
+
+// Init date/heure
+(()=>{
+  const n=new Date();
+  document.getElementById('date-val').value=n.toISOString().split('T')[0];
+  document.getElementById('heure-val').value=n.toTimeString().slice(0,5);
+})();
+
+// Toggle blocs
+function toggle(id){
+  const body=document.getElementById(`body-${id}`);
+  const hdr=body.previousElementSibling;
+  body.classList.toggle('open');
+  hdr.classList.toggle('open');
+}
+
+function onV(el){
+  el.classList.toggle('filled',!!el.value);
+  updateProg();
+}
+
+// Calculs auto
+function calcThon(){
+  const pcV=parseFloat(document.getElementById('thon_pc_veille').value)||0;
+  const pcA=parseFloat(document.getElementById('thon_pc_auj').value)||0;
+  const saV=parseFloat(document.getElementById('thon_sashi_veille').value)||0;
+  const saA=parseFloat(document.getElementById('thon_sashi_auj').value)||0;
+  const pcT=document.getElementById('thon_pc_total');
+  const saT=document.getElementById('thon_sashi_total');
+  if(pcV||pcA) pcT.textContent=(pcV+pcA).toFixed(2)+' kg';
+  else pcT.textContent='—';
+  if(saV||saA) saT.textContent=(saV+saA)+' sashimis';
+  else saT.textContent='—';
+}
+
+function calcPouletG(){
+  const vP=parseFloat(document.getElementById('pg_veille_piece').value)||0;
+  const aP=parseFloat(document.getElementById('pg_auj_piece').value)||0;
+  const vK=parseFloat(document.getElementById('pg_veille_kg').value)||0;
+  const aK=parseFloat(document.getElementById('pg_auj_kg').value)||0;
+  const tP=document.getElementById('pg_total_piece');
+  const tK=document.getElementById('pg_total_kg');
+  tP.textContent=(vP||aP)?(vP+aP)+' pièce'+(vP+aP>1?'s':''):'—';
+  tK.textContent=(vK||aK)?(vK+aK).toFixed(2)+' kg':'—';
+}
+
+function calcEntre(){
+  const vP=parseFloat(document.getElementById('entre_veille_piece').value)||0;
+  const aP=parseFloat(document.getElementById('entre_auj_piece').value)||0;
+  const vK=parseFloat(document.getElementById('entre_veille_kg').value)||0;
+  const aK=parseFloat(document.getElementById('entre_auj_kg').value)||0;
+  const tP=document.getElementById('entre_total_piece');
+  const tK=document.getElementById('entre_total_kg');
+  tP.textContent=(vP||aP)?(vP+aP)+' tranche'+(vP+aP>1?'s':''):'—';
+  tK.textContent=(vK||aK)?(vK+aK).toFixed(2)+' kg':'—';
+}
+
+function calcPane(){
+  const vP=parseFloat(document.getElementById('pane_veille_piece').value)||0;
+  const aP=parseFloat(document.getElementById('pane_auj_piece').value)||0;
+  const vK=parseFloat(document.getElementById('pane_veille_kg').value)||0;
+  const aK=parseFloat(document.getElementById('pane_auj_kg').value)||0;
+  document.getElementById('pane_total_piece').textContent=(vP||aP)?(vP+aP)+' pièce'+(vP+aP>1?'s':''):'—';
+  document.getElementById('pane_total_kg').textContent=(vK||aK)?(vK+aK).toFixed(2)+' kg':'—';
+}
+
+function calcBroPou(){
+  const v=parseFloat(document.getElementById('bro_pou_veille').value)||0;
+  const a=parseFloat(document.getElementById('bro_pou_auj').value)||0;
+  const aK=parseFloat(document.getElementById('bro_pou_auj_kg').value)||0;
+  document.getElementById('bro_pou_total').textContent=(v||a)?(v+a)+' bro.':'—';
+  document.getElementById('bro_pou_total_kg').textContent=aK?aK.toFixed(2)+' kg':'—';
+}
+
+function calcBroPoi(){
+  const v=parseFloat(document.getElementById('bro_poi_veille').value)||0;
+  const a=parseFloat(document.getElementById('bro_poi_auj').value)||0;
+  const aK=parseFloat(document.getElementById('bro_poi_auj_kg').value)||0;
+  document.getElementById('bro_poi_total').textContent=(v||a)?(v+a)+' bro.':'—';
+  document.getElementById('bro_poi_total_kg').textContent=aK?aK.toFixed(2)+' kg':'—';
+}
+
+function calcTraPoi(){
+  const v=parseFloat(document.getElementById('tra_poi_veille').value)||0;
+  const vK=parseFloat(document.getElementById('tra_poi_veille_kg').value)||0;
+  const a=parseFloat(document.getElementById('tra_poi_auj').value)||0;
+  const aK=parseFloat(document.getElementById('tra_poi_auj_kg').value)||0;
+  document.getElementById('tra_poi_total').textContent=(v||a)?(v+a)+' tranche'+(v+a>1?'s':''):'—';
+  document.getElementById('tra_poi_total_kg').textContent=(vK||aK)?(vK+aK).toFixed(2)+' kg':'—';
+}
+
+function calcCoeur(){
+  const v=parseFloat(document.getElementById('coeur_veille').value)||0;
+  const a=parseFloat(document.getElementById('coeur_auj').value)||0;
+  const aK=parseFloat(document.getElementById('coeur_auj_kg').value)||0;
+  document.getElementById('coeur_total').textContent=(v||a)?(v+a)+' bro.':'—';
+  document.getElementById('coeur_total_kg').textContent=aK?aK.toFixed(2)+' kg':'—';
+}
+
+function calcBraise(){
+  const v=parseFloat(document.getElementById('braise_veille').value)||0;
+  const a=parseFloat(document.getElementById('braise_auj_kg').value)||0;
+  document.getElementById('braise_total').textContent=(v||a)?(v+a).toFixed(2)+' kg':'—';
+}
+
+function calcChaomen(){
+  const v=parseFloat(document.getElementById('ch_veille_kg').value)||0;
+  const a=parseFloat(document.getElementById('ch_auj_kg').value)||0;
+  const tot=document.getElementById('ch_total');
+  if(v||a) tot.textContent=(v+a).toFixed(2)+' kg';
+  else tot.textContent='—';
+}
+
+// Récupérer toutes les valeurs
+function getAllValues(){
+  const ids=document.querySelectorAll('.champ-val[id]');
+  const vals={};
+  ids.forEach(el=>{
+    if(el.tagName==='INPUT'&&el.value) vals[el.id]=parseFloat(el.value);
+  });
+  return vals;
+}
+
+function updateProg(){
+  const inputs=document.querySelectorAll('.champ-val[id]');
+  let total=0,filled=0;
+  inputs.forEach(el=>{if(el.tagName==='INPUT'){total++;if(el.value)filled++;}});
+  const pct=total>0?Math.round(filled/total*100):0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-lbl').textContent=`${filled} / ${total} champs saisis (${pct}%)`;
+}
+
+function resetAll(){
+  document.querySelectorAll('.champ-val[id]').forEach(el=>{
+    if(el.tagName==='INPUT'){el.value='';el.classList.remove('filled');}
+    else el.textContent='—';
+  });
+  document.getElementById('obs').value='';
+  document.getElementById('suc').classList.remove('show');
+  calcThon(); calcChaomen(); updateProg();
+}
+
+function toast(msg,dur=3000){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+async function valider(){
+  const prenom=document.getElementById('prenom')?.value?.trim();
+  if(!prenom){toast('⚠️ Saisir votre prénom');return;}
+  const date=document.getElementById('date-val').value;
+  const heure=document.getElementById('heure-val').value;
+  const obs=document.getElementById('obs')?.value||'';
+  const valeurs=getAllValues();
+
+  // Structurer par produit
+  const pesees={
+    thon_rouge:{
+      pc_veille:valeurs.thon_pc_veille||null,
+      sashimi_veille:valeurs.thon_sashi_veille||null,
+      pc_auj:valeurs.thon_pc_auj||null,
+      sashimi_auj:valeurs.thon_sashi_auj||null,
+    },
+    poulet_grillade:{
+      veille_piece:valeurs.pg_veille_piece||null,
+      veille_kg:valeurs.pg_veille_kg||null,
+      auj_piece:valeurs.pg_auj_piece||null,
+      auj_kg:valeurs.pg_auj_kg||null,
+    },
+    entrecote:{
+      veille_tranches:valeurs.entre_veille_piece||null,
+      veille_kg:valeurs.entre_veille_kg||null,
+      auj_tranches:valeurs.entre_auj_piece||null,
+      auj_kg:valeurs.entre_auj_kg||null,
+    },
+    poulet_pane:{
+      veille_piece:valeurs.pane_veille_piece||null,
+      veille_kg:valeurs.pane_veille_kg||null,
+      auj_piece:valeurs.pane_auj_piece||null,
+      auj_kg:valeurs.pane_auj_kg||null,
+    },
+    brochette_poulet:{
+      veille:valeurs.bro_pou_veille||null,
+      auj:valeurs.bro_pou_auj||null,
+      auj_kg:valeurs.bro_pou_auj_kg||null,
+    },
+    brochette_poisson:{
+      veille:valeurs.bro_poi_veille||null,
+      auj:valeurs.bro_poi_auj||null,
+      auj_kg:valeurs.bro_poi_auj_kg||null,
+    },
+    stripped_tranches:{
+      veille:valeurs.tra_poi_veille||null,
+      veille_kg:valeurs.tra_poi_veille_kg||null,
+      auj:valeurs.tra_poi_auj||null,
+      auj_kg:valeurs.tra_poi_auj_kg||null,
+    },
+    coeur_veau:{
+      veille:valeurs.coeur_veille||null,
+      auj:valeurs.coeur_auj||null,
+      auj_kg:valeurs.coeur_auj_kg||null,
+    },
+    poulet_chaomen:{
+      veille_kg:valeurs.ch_veille_kg||null,
+      auj_kg:valeurs.ch_auj_kg||null,
+    },
+    boeuf_braise:{
+      veille:valeurs.braise_veille||null,
+      auj:valeurs.braise_auj||null,
+      auj_kg:valeurs.braise_auj_kg||null,
+    }
+  };
+
+  const payload={
+    date_service:date,heure_service:heure,prenom,
+    plat:'GRANDES PESÉES',
+    ingredients:Object.entries(pesees).map(([k,v])=>({nom:k,valeur:null,unite:'voir détail',...v})),
+    observations:obs,
+    type_saisie:'grandes_pesees',
+    pesees_detail:pesees
+  };
+
+  const btn=document.getElementById('btn-val');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin"></span>Enregistrement...';
+
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/pesees`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':SUPABASE_KEY,
+        'Authorization':`Bearer ${SUPABASE_KEY}`,
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify(payload)
+    });
+    if(res.ok||res.status===201){
+      document.getElementById('suc').textContent=`✅ Grandes pesées du ${date} enregistrées par ${prenom} !`;
+      document.getElementById('suc').classList.add('show');
+      toast('✅ Enregistré !');
+      document.getElementById('suc').scrollIntoView({behavior:'smooth'});
+    }else{
+      const err=await res.text();
+      toast('❌ Erreur : '+err.slice(0,80));
+    }
+  }catch(e){
+    toast('❌ Connexion impossible');
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='⚖️ Enregistrer les pesées';
+  }
+}
+
+updateProg();
+</script>
+</body>
+</html>
